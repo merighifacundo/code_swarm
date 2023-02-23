@@ -50,6 +50,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
+import processing.event.MouseEvent;
 
 
 /**
@@ -177,6 +178,8 @@ public class code_swarm extends PApplet {
   public AvatarFetcher avatarFetcher;
 
   private int fontColor;
+
+  private boolean pause = false;
 
 
 
@@ -346,8 +349,9 @@ public class code_swarm extends PApplet {
   @SuppressWarnings("unchecked")
   private AvatarFetcher getAvatarFetcher(String avatarFetcherName) {
     try {
-      Class<AvatarFetcher> c = (Class<AvatarFetcher>)Class.forName(avatarFetcherName);
-      return c.getConstructor(CodeSwarmConfig.class).newInstance(cfg);
+      System.out.println(avatarFetcherName);
+     
+      return new NoAvatar(cfg);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -378,9 +382,9 @@ public class code_swarm extends PApplet {
   public void draw() {
     long start = System.currentTimeMillis();
     background(background); // clear screen with background color
-
-    this.update(); // update state to next frame
-
+    if (!this.pause) {
+      this.update(); // update state to next frame
+    }
     // Draw edges (for debugging only)
     if (showEdges) {
       for (Edge edge : edges.values()) {
@@ -1140,6 +1144,33 @@ public class code_swarm extends PApplet {
       name = n;
       pe = p;
     }
+  }
+
+  private boolean isProximityAccepted(int position, int anotherPosition) {
+    return Math.abs(position - anotherPosition) < 2;
+  }
+
+  @Override
+  protected void handleMouseEvent(MouseEvent event) {
+      switch (event.getAction()) {
+        case MouseEvent.CLICK:
+          for (FileNode element : this.getLivingNodes()) {
+            if (this.isProximityAccepted((int) element.mPosition.x, event.getX()) &&  this.isProximityAccepted((int) element.mPosition.y, event.getY())){
+              System.out.println("This is a node found: " + element.name);
+              drawLegend();
+              return ;
+            } else {
+              if (this.pause) {
+                System.out.println("NOt found");
+              }
+            }
+          } 
+          this.pause = !this.pause;
+          break;
+      
+        default:
+          break;
+      }
   }
 
 

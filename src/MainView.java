@@ -165,11 +165,12 @@ private void goButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
             String url = repositoryURL.getText();
             p.put("username", username);
             p.put("repositoryURL", url);
-            SVNHistory hist = new SVNHistory("realtime_sample");
-            hist.run(url, username, passwd);
+            //SVNHistory hist = new SVNHistory("realtime_sample");
+            //hist.run(url, username, passwd);
             try {
+                System.out.println(args[0]);
                 CodeSwarmConfig cfg = new CodeSwarmConfig(args[0]);
-                cfg.setInputFile(hist.getFilePath());
+                cfg.setInputFile("data/sample-repevents.xml");
                 code_swarm.start(cfg);
                 dispose();
             } catch (IOException e) {

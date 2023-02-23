@@ -40,3 +40,10 @@ IsInputSorted=true
 # then place png files named after the usernames of committers in
 # the data/local_avatars directory
 # data/local_avatars/default.png is used by default
+
+#Size in pixels of the width and height of avatar images
+AvatarSize=40
+
+# Used by the LocalAvatar fetcher
+LocalAvatarDirectory=data/local_avatars/
+LocalAvatarDefaultPic=default.png

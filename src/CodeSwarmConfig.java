@@ -252,6 +252,7 @@ public class CodeSwarmConfig {
    */
   protected static Color stringToColor( String str ){
     // assume format is "R,G,B"
+    System.out.println(str);
     String [] tokens = str.split( "," );
     int [] values = new int[3];
     for( int i = 0; i < 3; i++ )
