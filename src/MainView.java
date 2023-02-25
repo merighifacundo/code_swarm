@@ -122,7 +122,7 @@ private void goButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
                 System.out.println(args[0]);
                 CodeSwarmConfig cfg = new CodeSwarmConfig(args[0]);
                 cfg.setInputFile("data/sample-repevents.xml");
-                code_swarm.start(cfg);
+                CodeSwarm.start(cfg);
                 dispose();
             } catch (IOException e) {
                 System.err.println("Failed due to exception: " + e.getMessage());

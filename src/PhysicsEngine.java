@@ -51,20 +51,20 @@ public abstract class PhysicsEngine
   public void finalizeFrame() {}
 
 
-  public void onRelax(code_swarm.PersonNode p){}
-  public void onRelax(code_swarm.FileNode f){}
-  public void onRelax(code_swarm.Edge e){}
+  public void onRelax(CodeSwarm.PersonNode p){}
+  public void onRelax(CodeSwarm.FileNode f){}
+  public void onRelax(CodeSwarm.Edge e){}
 
-  public void onUpdate(code_swarm.PersonNode p){
+  public void onUpdate(CodeSwarm.PersonNode p){
     updateNode(p);
   }
-  public void onUpdate(code_swarm.FileNode f){
+  public void onUpdate(CodeSwarm.FileNode f){
     updateNode(f);
   }
-  public void onUpdate(code_swarm.Edge edge) {
+  public void onUpdate(CodeSwarm.Edge edge) {
     edge.decay();
   }
-  private void updateNode(code_swarm.Node node) {
+  private void updateNode(CodeSwarm.Node node) {
     Vector2f tforce = new Vector2f(node.mPosition.x - node.mLastPosition.x, node.mPosition.y - node.mLastPosition.y);
     node.mLastPosition = new Vector2f(node.mPosition);
     tforce.scale(node.mFriction); // Friction!
@@ -77,7 +77,7 @@ public abstract class PhysicsEngine
    *
    * @return Vector2f vector holding the starting location for a Person Node
    */
-  public Vector2f startLocation(code_swarm.PersonNode node){
+  public Vector2f startLocation(CodeSwarm.PersonNode node){
     return randomLocation();
   }
 
@@ -86,7 +86,7 @@ public abstract class PhysicsEngine
    *
    * @return Vector2f vector holding the starting location for a File Node
    */
-  public Vector2f startLocation(code_swarm.FileNode node){
+  public Vector2f startLocation(CodeSwarm.FileNode node){
     return randomLocation();
   }
 
@@ -94,18 +94,18 @@ public abstract class PhysicsEngine
    *
    * @return Vector2f vector holding the starting velocity for a File Node
    */
-  public Vector2f startVelocity(code_swarm.PersonNode node) {
+  public Vector2f startVelocity(CodeSwarm.PersonNode node) {
     return new Vector2f();
   }
 
-  public Vector2f startVelocity(code_swarm.FileNode node) {
+  public Vector2f startVelocity(CodeSwarm.FileNode node) {
     Vector2f vec = new Vector2f(((float)Math.random()*2 - 1), ((float)Math.random()*2-1));
     vec.scale((1 / vec.length()) * (float)Math.random() * 15 / node.mass);
     return vec;
   }
 
   public Vector2f randomLocation() {
-    Vector2f vec = new Vector2f(code_swarm.width*(float)Math.random(), code_swarm.height*(float)Math.random());
+    Vector2f vec = new Vector2f(CodeSwarm.width*(float)Math.random(), CodeSwarm.height*(float)Math.random());
     return vec;
   }
 
