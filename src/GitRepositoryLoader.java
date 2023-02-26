@@ -37,6 +37,8 @@ import processing.event.MouseEvent;
 import org.eclipse.jgit.revwalk.*;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.treewalk.TreeWalk;
+
 
 public class GitRepositoryLoader extends NodeFileLoader implements Runnable, NodeLoader { 
 
@@ -66,23 +68,37 @@ public class GitRepositoryLoader extends NodeFileLoader implements Runnable, Nod
                 revWalk.markStart(headCommit);
                 for (RevCommit commit : revWalk) {
                     // Print the commit message and author information
-                    System.out.println("Commit: " + commit.getName());
+                    /*System.out.println("Commit: " + commit.getName());
                     System.out.println("Author: " + commit.getAuthorIdent().getName() + " <" + commit.getAuthorIdent().getEmailAddress() + ">");
-                    System.out.println("Date: " + commit.getAuthorIdent().getWhen());
+                    System.out.println("Date: " + commit.getAuthorIdent().getWhen().getTime());
                     System.out.println("Message: " + commit.getFullMessage());
-                    System.out.println();
-
+                    System.out.println();*/
+                    StringBuilder sb = new StringBuilder();
+                    TreeWalk treeWalk = new TreeWalk(repository);
+                    treeWalk.addTree(commit.getTree());
+                    treeWalk.setRecursive(false);
+                    while(treeWalk.next()){
+                        sb.append(treeWalk.getPathString());
+                        break;
+                    }
                     
+                    FileEvent fileEvent = new FileEvent(commit.getAuthorIdent().getWhen().getTime(), commit.getAuthorIdent().getName(), "", sb.toString());
+                    //System.out.println(fileEvent.toString());
+                    this.queue.put(fileEvent);
+                    System.out.println(this.queue.size());
+
                 }
             }
-            this.loaded = true;
+            System.out.println("Wrapping up the loading");
         } catch (Exception e) {
             System.out.println("Error");
             e.printStackTrace();
             this.loaded = true;
         }
+        this.loaded = true;
     }
     public boolean getFinishedLoading() {
+        System.out.println(this.loaded);
         return this.loaded;
     }
 

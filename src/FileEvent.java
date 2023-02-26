@@ -70,4 +70,8 @@ import java.util.TreeSet;
     public int compareTo(Object o) {
       return date.compareTo(((FileEvent) o).date);
     }
+
+    public String toString() {
+      return "Author: " + this.author + ", date: " + this.date + ", filename: " + this.filename;
+    }
   }
