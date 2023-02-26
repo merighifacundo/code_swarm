@@ -885,7 +885,7 @@ public class CodeSwarm extends PApplet {
     }
 
     final String fullFilename = filename;
-    eventLoader = new XMLQueueLoader(fullFilename, eventsQueue, isInputSorted, avatarFetcher);
+    eventLoader = new GitRepositoryLoader(fullFilename, eventsQueue, isInputSorted, avatarFetcher);
 
     if (isInputSorted)
       backgroundExecutor.execute(eventLoader);

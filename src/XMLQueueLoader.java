@@ -98,6 +98,7 @@ public class XMLQueueLoader extends NodeFileLoader implements Runnable, NodeLoad
 
             try {
               queue.put(evt);
+              System.out.println(queue.size());
             } catch (InterruptedException e) {
               System.out.println("Interrupted while trying to put into eventsQueue");
               e.printStackTrace();
@@ -111,6 +112,7 @@ public class XMLQueueLoader extends NodeFileLoader implements Runnable, NodeLoad
       });
       try {
         reader.parse(fullFilename);
+        System.out.println("Wrapping up the loading");
       } catch (Exception e) {
         System.out.println("Error parsing xml:");
         e.printStackTrace();
