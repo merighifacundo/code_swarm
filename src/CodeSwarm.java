@@ -174,7 +174,7 @@ public class CodeSwarm extends PApplet {
 
   private boolean pause = false;
 
-  XMLQueueLoader eventLoader;
+  NodeFileLoader eventLoader;
 
   /**
    * Initialization
@@ -876,7 +876,7 @@ public class CodeSwarm extends PApplet {
     }
 
     final String fullFilename = filename;
-    eventLoader = new XMLQueueLoader(fullFilename, eventsQueue, isInputSorted, avatarFetcher);
+    eventLoader = new JsonQueueLoader(fullFilename, eventsQueue, isInputSorted, avatarFetcher);
 
     if (isInputSorted)
       backgroundExecutor.execute(eventLoader);

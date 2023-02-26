@@ -26,10 +26,27 @@ import java.util.TreeSet;
     int linesadded;
     int linesremoved;
 
+
+    public void setDate(Date date) {
+      this.date = date;
+    }
+
+    public void setAuthor(String author) {
+      this.author = author;
+    }
+
+    public void setFilename(String filename) {
+      this.filename = filename;
+    }
+
+    public FileEvent() {
+
+    }
+
     /**
      * short constructor with base data
      */
-    FileEvent(long datenum, String author, String path, String filename) {
+    public FileEvent(long datenum, String author, String path, String filename) {
       this(datenum, author, path, filename, 0, 0);
     }
 

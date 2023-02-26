@@ -37,13 +37,13 @@ import processing.event.MouseEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-public class JsonQueueLoader  implements Runnable {
+public class JsonQueueLoader extends NodeFileLoader implements Runnable, NodeLoader {
 
 
     private final String fullFilename;
     private BlockingQueue<FileEvent> queue;
     boolean isXMLSorted;
-
+    private boolean loaded = false;
     private AvatarFetcher avatarFetcher;
 
     public JsonQueueLoader(String fullFilename, BlockingQueue<FileEvent> queue, boolean isXMLSorted, AvatarFetcher avatarFetcher) {
@@ -57,9 +57,19 @@ public class JsonQueueLoader  implements Runnable {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             List<FileEvent> events = objectMapper.readValue(new File(this.fullFilename), new TypeReference<List<FileEvent>>(){});
+            for (FileEvent anEvent : events) {
+                this.queue.put(anEvent);
+            }
+            this.loaded = true;
         } catch (Exception e) {
             System.out.println("Error");
+            e.printStackTrace();
+            this.loaded = true;
         }
     }
+    public boolean getFinishedLoading() {
+        return this.loaded;
+    }
+
 
 }

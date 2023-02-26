@@ -34,7 +34,7 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 
 
-public class XMLQueueLoader implements Runnable {
+public class XMLQueueLoader extends NodeFileLoader implements Runnable, NodeLoader {
     private final String fullFilename;
     private BlockingQueue<FileEvent> queue;
     boolean isXMLSorted;
