@@ -158,7 +158,7 @@ public class CodeSwarm extends PApplet {
   protected static int width=0;
   protected static int height=0;
   private int maxFramesSaved;
-
+  private PImage img;
   protected int maxBackgroundThreads;
   protected ExecutorService backgroundExecutor;
   /**
@@ -173,6 +173,7 @@ public class CodeSwarm extends PApplet {
   private int fontColor;
 
   private boolean pause = false;
+  private boolean showExtensions = false;
 
   NodeFileLoader eventLoader;
 
@@ -183,6 +184,8 @@ public class CodeSwarm extends PApplet {
 
     utils = new Utils();
 
+    size(500, 500);
+    img = loadImage("data/local_avatars/default.png");
     width=cfg.getPositiveIntProperty(CodeSwarmConfig.WIDTH_KEY);
     height=cfg.getPositiveIntProperty(CodeSwarmConfig.HEIGHT_KEY);
 
@@ -378,6 +381,12 @@ public class CodeSwarm extends PApplet {
     if (!this.pause) {
       this.update(); // update state to next frame
     }
+
+    if (this.showExtensions) {
+      background(255);
+      image(img, 0, 0);
+      return ;
+    } 
     // Draw edges (for debugging only)
     if (showEdges) {
       for (Edge edge : edges.values()) {
@@ -876,7 +885,7 @@ public class CodeSwarm extends PApplet {
     }
 
     final String fullFilename = filename;
-    eventLoader = new JsonQueueLoader(fullFilename, eventsQueue, isInputSorted, avatarFetcher);
+    eventLoader = new XMLQueueLoader(fullFilename, eventsQueue, isInputSorted, avatarFetcher);
 
     if (isInputSorted)
       backgroundExecutor.execute(eventLoader);
@@ -1077,7 +1086,7 @@ public class CodeSwarm extends PApplet {
           for (FileNode element : this.getLivingNodes()) {
             if (this.isProximityAccepted((int) element.mPosition.x, event.getX()) &&  this.isProximityAccepted((int) element.mPosition.y, event.getY())){
               System.out.println("This is a node found: " + element.name);
-              drawLegend();
+              this.showExtensions = true;
               return ;
             } else {
               if (this.pause) {
