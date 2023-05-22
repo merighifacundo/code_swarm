@@ -42,11 +42,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.vecmath.Vector2f;
 import org.codeswarm.dependencies.sun.tools.javac.util.Pair;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -57,7 +52,7 @@ import processing.event.MouseEvent;
  *
  *
  */
-public class code_swarm extends PApplet {
+public class CodeSwarm extends PApplet {
   /** @remark needed for any serializable class */
   public static final long serialVersionUID = 0;
 
@@ -84,7 +79,7 @@ public class code_swarm extends PApplet {
   static List<FileNode> livingNodes = new ArrayList<FileNode>();
 
   LinkedList<ColorBins> history;
-  boolean finishedLoading = false;
+  
 
   // Temporary variables
   FileEvent currentEvent;
@@ -117,8 +112,6 @@ public class code_swarm extends PApplet {
   boolean drawFilesFuzzy;
   boolean drawFilesJelly;
 
-  //used to ensure that input is sorted when we're told it is
-  long maximumDateSeenSoFar = 0;
 
 
   // Color mapper
@@ -165,7 +158,7 @@ public class code_swarm extends PApplet {
   protected static int width=0;
   protected static int height=0;
   private int maxFramesSaved;
-
+  private PImage img;
   protected int maxBackgroundThreads;
   protected ExecutorService backgroundExecutor;
   /**
@@ -180,8 +173,9 @@ public class code_swarm extends PApplet {
   private int fontColor;
 
   private boolean pause = false;
+  private boolean showExtensions = false;
 
-
+  NodeFileLoader eventLoader;
 
   /**
    * Initialization
@@ -190,6 +184,8 @@ public class code_swarm extends PApplet {
 
     utils = new Utils();
 
+    size(500, 500);
+    img = loadImage("data/local_avatars/default.png");
     width=cfg.getPositiveIntProperty(CodeSwarmConfig.WIDTH_KEY);
     height=cfg.getPositiveIntProperty(CodeSwarmConfig.HEIGHT_KEY);
 
@@ -315,7 +311,7 @@ public class code_swarm extends PApplet {
     initColors();
 
     loadRepEvents(cfg.getStringProperty(CodeSwarmConfig.INPUT_FILE_KEY)); // event formatted (this is the standard)
-    while(!finishedLoading && eventsQueue.isEmpty());
+    while(!eventLoader.getFinishedLoading() && eventsQueue.isEmpty());
     if(eventsQueue.isEmpty()){
       System.out.println("No events found in repository xml file.");
       System.exit(1);
@@ -385,6 +381,12 @@ public class code_swarm extends PApplet {
     if (!this.pause) {
       this.update(); // update state to next frame
     }
+
+    if (this.showExtensions) {
+      background(255);
+      image(img, 0, 0);
+      return ;
+    } 
     // Draw edges (for debugging only)
     if (showEdges) {
       for (Edge edge : edges.values()) {
@@ -448,7 +450,7 @@ public class code_swarm extends PApplet {
 
     // Stop animation when we run out of data
 
-    if (finishedLoading && eventsQueue.isEmpty()) {
+    if (eventLoader.getFinishedLoading() && eventsQueue.isEmpty()) {
       // noLoop();
       backgroundExecutor.shutdown();
       try {
@@ -713,7 +715,7 @@ public class code_swarm extends PApplet {
     currentEvent = eventsQueue.peek();
 
     while (currentEvent != null && currentEvent.date.before(nextDate)) {
-      if (finishedLoading){
+      if (eventLoader.getFinishedLoading()){
         currentEvent = eventsQueue.poll();
         if (currentEvent == null)
           return;
@@ -765,7 +767,7 @@ public class code_swarm extends PApplet {
 
       // prevDate = currentEvent.date;
       prevNode = n;
-      if (finishedLoading)
+      if (eventLoader.getFinishedLoading())
         currentEvent = eventsQueue.peek();
       else{
         while(eventsQueue.isEmpty());
@@ -883,7 +885,7 @@ public class code_swarm extends PApplet {
     }
 
     final String fullFilename = filename;
-    Runnable eventLoader = new XMLQueueLoader(fullFilename, eventsQueue, isInputSorted);
+    eventLoader = new GitRepositoryLoader(fullFilename, eventsQueue, isInputSorted, avatarFetcher);
 
     if (isInputSorted)
       backgroundExecutor.execute(eventLoader);
@@ -1020,80 +1022,7 @@ public class code_swarm extends PApplet {
     paused = !paused;
   }
 
-  private class XMLQueueLoader implements Runnable {
-    private final String fullFilename;
-    private BlockingQueue<FileEvent> queue;
-    boolean isXMLSorted;
-    private Set<String> peopleSeen = new TreeSet<String>();
-
-    private XMLQueueLoader(String fullFilename, BlockingQueue<FileEvent> queue, boolean isXMLSorted) {
-      this.fullFilename = fullFilename;
-      this.queue = queue;
-      this.isXMLSorted = isXMLSorted;
-    }
-
-    public void run(){
-      XMLReader reader = null;
-      try {
-        reader = XMLReaderFactory.createXMLReader();
-      } catch (SAXException e) {
-        System.out.println("Couldn't find/create an XML SAX Reader");
-        e.printStackTrace();
-        System.exit(1);
-      }
-      reader.setContentHandler(new DefaultHandler(){
-        public void startElement(String uri, String localName, String name,
-            Attributes atts) throws SAXException {
-          if (name.equals("event")){
-            String eventFilename = atts.getValue("filename");
-            String eventDatestr = atts.getValue("date");
-            long eventDate = Long.parseLong(eventDatestr);
-
-            //It's difficult for the user to tell that they're missing events,
-            //so we should crash in this case
-            if (isXMLSorted){
-              if (eventDate < maximumDateSeenSoFar){
-                System.out.println("Input not sorted, you must set IsInputSorted to false in your config file");
-                System.exit(1);
-              }
-              else
-                maximumDateSeenSoFar = eventDate;
-            }
-
-            String eventAuthor = atts.getValue("author");
-            // int eventLinesAdded = atts.getValue( "linesadded" );
-            // int eventLinesRemoved = atts.getValue( "linesremoved" );
-
-            FileEvent evt = new FileEvent(eventDate, eventAuthor, "", eventFilename);
-
-            //We want to pre-fetch images to minimize lag as images are loaded
-            if (!peopleSeen.contains(eventAuthor)){
-              avatarFetcher.fetchUserImage(eventAuthor);
-              peopleSeen.add(eventAuthor);
-            }
-
-            try {
-              queue.put(evt);
-            } catch (InterruptedException e) {
-              System.out.println("Interrupted while trying to put into eventsQueue");
-              e.printStackTrace();
-              System.exit(1);
-            }
-          }
-        }
-        public void endDocument(){
-          finishedLoading = true;
-        }
-      });
-      try {
-        reader.parse(fullFilename);
-      } catch (Exception e) {
-        System.out.println("Error parsing xml:");
-        e.printStackTrace();
-        System.exit(1);
-      }
-    }
-  }
+  
 
   class Utils {
     Utils () {
@@ -1157,7 +1086,7 @@ public class code_swarm extends PApplet {
           for (FileNode element : this.getLivingNodes()) {
             if (this.isProximityAccepted((int) element.mPosition.x, event.getX()) &&  this.isProximityAccepted((int) element.mPosition.y, event.getY())){
               System.out.println("This is a node found: " + element.name);
-              drawLegend();
+              this.showExtensions = true;
               return ;
             } else {
               if (this.pause) {
@@ -1174,45 +1103,7 @@ public class code_swarm extends PApplet {
   }
 
 
-  /**
-   * Describe an event on a file
-   */
-  class FileEvent implements Comparable<Object> {
-    Date date;
-    String author;
-    String filename;
-    String path;
-    int linesadded;
-    int linesremoved;
 
-    /**
-     * short constructor with base data
-     */
-    FileEvent(long datenum, String author, String path, String filename) {
-      this(datenum, author, path, filename, 0, 0);
-    }
-
-    /**
-     * constructor with number of modified lines
-     */
-    FileEvent(long datenum, String author, String path, String filename, int linesadded, int linesremoved) {
-      this.date = new Date(datenum);
-      this.author = author;
-      this.path = path;
-      this.filename = filename;
-      this.linesadded = linesadded;
-      this.linesremoved = linesremoved;
-    }
-
-    /**
-     * Comparing two events by date (Not Used)
-     * @param o
-     * @return -1 if <, 0 if =, 1 if >
-     */
-    public int compareTo(Object o) {
-      return date.compareTo(((FileEvent) o).date);
-    }
-  }
 
   /**
    * Base class for all drawable objects
@@ -1603,7 +1494,7 @@ public class code_swarm extends PApplet {
    */
   public static void start(CodeSwarmConfig config){
     cfg = config;
-    PApplet.main(new String[]{"code_swarm"});
+    PApplet.main(new String[]{"CodeSwarm"});
   }
 
 }
